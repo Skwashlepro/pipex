@@ -1,40 +1,32 @@
 NAME 		= pipex
-LIB		= includes/libft/libft.a
-PTF		= includes/printf/libftprintf.a
-CFLAGS		= -Wall -Werror -Wextra
+LIB			= includes/libft/libft.a
+CFLAGS		= -Wall -Werror -Wextra -g3
 CC			= cc
-AR			= ar rcs
-VPATH = srcs
+VPATH		= srcs
 LIBFT_PATH 	= ./includes/libft
-PRINTF_PATH = ./includes/printf
 INC = -Iincludes/
 
-SRC_FILES	= main pipex
+SRC_FILES	= main pipex utils
 
 OBJ	= $(addsuffix .o, $(SRC_FILES))
 
-all: $(LIB) $(PTF) $(NAME)
+all: $(LIB) $(NAME)
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(INC) -I/usr/include -O2 -c $< -o $@
 
 $(NAME): $(OBJ)
-	$(CC) $(OBJ) $(INC) $(LIB) $(PTF) $(NAME)
+	$(CC) $(INC) $(OBJ) $(LIB) -o $(NAME)
 
 $(LIB): 
 	@make -s -C $(LIBFT_PATH)
 
-$(PTF): 
-	@make -s -C $(PRINTF_PATH)
-
 clean:
 	@make -s $@ -C $(LIBFT_PATH)
-	@make -s $@ -C $(PRINTF_PATH)
 	rm -f ${OBJ} 
 
 fclean: clean
 	@make -s $@ -C $(LIBFT_PATH)
-	@make -s $@ -C $(PRINTF_PATH)
 	rm -f ${NAME}
 
 re: fclean all

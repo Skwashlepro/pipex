@@ -6,70 +6,110 @@
 /*   By: luctan <luctan@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/11 17:47:19 by luctan            #+#    #+#             */
-/*   Updated: 2024/07/11 21:41:41 by luctan           ###   ########.fr       */
+/*   Updated: 2024/07/17 22:22:17 by luctan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
 
-void	parsing(char *envp[], char **av, t_pipex *data)
+int	parsing(char *envp[], char *cmd, t_pipex *data)
 {
-	char *envp_path;
-	
-	envp_path = ft_substr(envp, 0, ft_strlen(envp));
-	data->paths = ft_split(envp, ':');
-	data->cmd_args = ft_split(av[2], ' ');
-}
+	char	*tmp;
+	int		i;
+	int		j;
 
-void	child_proc(t_pipex *data, int *pipette, char *envp[])
-{
-	int	status;
-	int	i;
-	char *cmd;
-	
-	i = -1;
-	if (dup2(data->f1, STDIN_FILENO) < 0);
-		return (close(data->f1), perror("STDIN_CHILD"));	
-	if (dup2(pipette[1], STDOUT_FILENO) < 0);
-		return (close(pipette[1]), perror("STDOUT_CHILD"));
-	close(pipette[0]);
-	close(data->f1);
-	while (data->paths[++i])
+	i = 0;
+	j = -1;
+	ft_args(cmd);
+	data->cmd_args = ft_split(cmd, ' ');
+	if (ft_strchr(data->cmd_args[0], '/'))
+		if (access(data->cmd_args[0], F_OK | X_OK | R_OK) == 0)
+			execve(data->cmd_args[0], data->cmd_args, envp);
+	while (ft_strncmp(envp[i], "PATH=", 5) != 0)
+		i++;
+	if (!envp[i])
+		return (1);
+	data->envp_path = envp[i] + 5;
+	data->paths = ft_split(data->envp_path, ':');
+	while (data->paths[++j])
 	{
-		cmd = ft_strjoin(data->paths[i], data->cmd_args[0]);
-		execve(data->paths[i], data->cmd_args, envp);
-		free(cmd);
+		tmp = ft_strjoin(data->paths[j], "/");
+		free(data->paths[j]);
+		data->paths[j] = ft_strdup(tmp);
+		free(tmp);
 	}
+	return (0);
 }
 
-void	parent_proc(t_pipex *data, int *pipette, char *envp[])
+void	child1_proc(t_pipex *data, int *pipette, char *envp[], char **av)
 {
-	int	status;
 	int		i;
 	char	*cmd;
 
 	i = -1;
-	waitpid(-1, &status, 0);
-	if (dup2(data->f2, STDOUT_FILENO) < 0);
-		return (perror("STDOUT_PARENT"));
-	if (dup2(pipette[0], STDIN_FILENO) < 0);
-		return (perror("STDIN_PARENT"));
-	close(pipette[1]);
 	close(data->f2);
+	close(pipette[0]);
+	if (dup2(data->f1, STDIN_FILENO) < 0)
+		return (perror("Permission denied"), exit(0));
+	close(data->f1);
+	if (dup2(pipette[1], STDOUT_FILENO) < 0)
+		return (perror("STDOUT_CHILD1"), exit(0));
+	close(pipette[1]);
+	if (parsing(envp, av[2], data))
+		ft_exit(av[2], data);
+	while (data->paths[++i])
+	{
+		cmd = ft_strjoin(data->paths[i], data->cmd_args[0]);
+		ft_execute(cmd, envp, data);
+		free(cmd);
+	}
+	ft_exit(av[2], data);
+	exit(127);
 }
 
-void	pipex(t_pipex *data, char **av, char *envp[])
+void	child2_proc(t_pipex *data, int *pipette, char *envp[], char **av)
+{
+	int		i;
+	char	*cmd;
+
+	i = -1;
+	close(data->f1);
+	close(pipette[1]);
+	if (dup2(data->f2, STDOUT_FILENO) < 0)
+		return (perror("Permission denied"), exit(1));
+	close(data->f2);
+	if (dup2(pipette[0], STDIN_FILENO) < 0)
+		return (perror("STDIN_CHILD2"), exit(1));
+	close(pipette[0]);
+	if (parsing(envp, av[3], data))
+		ft_exit(av[3], data);
+	while (data->paths[++i])
+	{
+		cmd = ft_strjoin(data->paths[i], data->cmd_args[0]);
+		ft_execute(cmd, envp, data);
+		free(cmd);
+	}
+	ft_exit(av[3], data);
+	exit(127);
+}
+
+int	pipex(t_pipex *data, char **av, char *envp[])
 {
 	int	pipette[2];
-	pid_t papa;
-
-	pipe(pipette);
-	papa = fork();
-	parsing(envp, av, data);
-	if (papa < 0)
-		return (perror("ah zebi"));
-	if (!papa)
-		child_proc(data, *pipette, envp);
-	else
-		parent_proc(data, *pipette, envp);
+	
+	if (!envp[0])
+		exit(127);
+	if (pipe(pipette) < 0)
+		return (perror("Error : Unable to initialize pipe\n"), 1);
+	data->pid1 = fork();
+	if (data->pid1 < 0)
+		return (perror("Error : Unable to fork\n"), 1);
+	else if (data->pid1 == 0)
+		child1_proc(data, pipette, envp, av);
+	data->pid2 = fork();
+	if (data->pid2 < 0)
+		return (perror("Error : Unable to fork\n"), 1);
+	else if (data->pid2 == 0)
+		child2_proc(data, pipette, envp, av);
+	return (0);
 }

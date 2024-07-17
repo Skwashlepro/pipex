@@ -6,27 +6,37 @@
 /*   By: luctan <luctan@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/10 19:50:16 by luctan            #+#    #+#             */
-/*   Updated: 2024/07/11 21:35:30 by luctan           ###   ########.fr       */
+/*   Updated: 2024/07/17 21:09:27 by luctan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef PIPEX_H
 
-#endif
-#include <unistd.h>
-#include <fcntl.h>
-#include "libft/libft.h"
-#include "printf/ft_printf.h"
-#include "gnl/get_next_line.h"
+# include <stdio.h>
+# include "libft/libft.h"
+# include <fcntl.h>
+# include <sys/types.h>
+# include <sys/wait.h>
+# include <unistd.h>
 
 typedef struct s_pipex
 {
-	char **paths;
-	char **cmd_args;
-	int f1;
-	int	f2;
-	
-}	t_pipex;
+	char	**paths;
+	char	**cmd_args;
+	char	*envp_path;
+	int		f1;
+	int		f2;
+	int		status;
+	pid_t	pid1;
+	pid_t	pid2;
 
+}			t_pipex;
 
-void	pipex(int f1, int f2, char **av, char *envp[]);
+int			pipex(t_pipex *data, char **av, char *envp[]);
+void		free_data(t_pipex *data);
+void		ft_swap(t_pipex *data);
+int			child_status(int status);
+void		ft_execute(char *cmd, char *envp[], t_pipex *data);
+void		ft_args(char *cmd);
+void		ft_exit(char *cmd, t_pipex *data);
+#endif
