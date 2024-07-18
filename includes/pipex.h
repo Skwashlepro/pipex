@@ -6,11 +6,12 @@
 /*   By: luctan <luctan@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/10 19:50:16 by luctan            #+#    #+#             */
-/*   Updated: 2024/07/17 21:09:27 by luctan           ###   ########.fr       */
+/*   Updated: 2024/07/18 05:04:55 by luctan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef PIPEX_H
+# define PIPEX_H
 
 # include <stdio.h>
 # include "libft/libft.h"
@@ -38,5 +39,7 @@ void		ft_swap(t_pipex *data);
 int			child_status(int status);
 void		ft_execute(char *cmd, char *envp[], t_pipex *data);
 void		ft_args(char *cmd);
-void		ft_exit(char *cmd, t_pipex *data);
+void		ft_exit(char *cmd);
+void		ft_abs_path(t_pipex *data, char *envp[]);
+
 #endif

@@ -6,7 +6,7 @@
 /*   By: luctan <luctan@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/10 19:50:01 by luctan            #+#    #+#             */
-/*   Updated: 2024/07/17 22:21:49 by luctan           ###   ########.fr       */
+/*   Updated: 2024/07/18 05:27:09 by luctan           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,10 +59,7 @@ int	main(int ac, char **av, char *envp[])
 		close(data.f2);
 	}
 	else
-	{
-		ft_putstr_fd("Invalid Arguments\n", 2);
-		ft_putstr_fd("use it like : ./pipex infile cmd1 cmd2 outfile", 2);
-	}
+		ft_putstr_fd("Invalid Arguments\nuse it like : ./pipex infile cmd1 cmd2 outfile\n", 2);
 	waitpid(data.pid1, &data.status, 0);
 	waitpid(data.pid2, &data.status, 0);
 	if (WIFEXITED(data.status))
